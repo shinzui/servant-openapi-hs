@@ -6,9 +6,20 @@
   targeting OpenAPI 3.1.
 * Depend on [`openapi-hs`](https://github.com/shinzui/openapi-hs) instead of
   `openapi3`. The `Data.OpenApi.*` and `Servant.OpenApi.*` namespaces are
-  unchanged.
-* Require GHC 9.12.4 / 9.14.1; modernize to `cabal-version: 3.0` and
-  `build-type: Simple`.
+  unchanged. Generated documents now report `"openapi": "3.1.0"`.
+* Builds and passes its test suite against `openapi-hs`. The port required only
+  three library edits for OpenAPI-3.1 model changes — `type_` now takes
+  `OpenApiTypeSingle OpenApiArray` (the type-array model), and the `OpenApi` /
+  `PathItem` record combiners set the new 3.1 fields `webhooks` and `$ref`
+  (`_pathItemRef`).
+* Validate generated documents in two in-process layers beyond fixture
+  equality: a round-trip decode through `openapi-hs`'s version-enforcing
+  `FromJSON OpenApi`, and `validateEveryToJSON` example-conformance.
+* Add a `gen-openapi` executable that prints a representative API's OpenAPI 3.1
+  document to stdout; its output lints with 0 errors under
+  [`vacuum`](https://quobix.com/vacuum/).
+* Require GHC 9.12.4 / 9.14.1; modernize to `cabal-version: 3.0`,
+  `build-type: Simple`, and `default-language: GHC2024`.
 * Drop the `cabal-doctest`-based `doctests` test-suite (use `cabal-docspec` to
   run doctests instead).
 

@@ -76,9 +76,12 @@ This section must always reflect the actual current state of the work.
 - [x] **M3** — Layer-3 validation: `cabal run gen-openapi > openapi.json` then
       `nix run nixpkgs#vacuum-go -- lint -d openapi.json` reports **0 errors** (28 style warnings
       about missing descriptions/examples; vacuum exits 0; Quality Score 90/100). ✅
-- [ ] **M4** — (Reproducible build) Add `flake.module.nix` providing an `openapi-hs` package
-      override so `nix build .#default` builds the library through Nix.
-- [ ] **M5** — Update `CHANGELOG.md` and `README.md` with the concrete outcome and commit.
+- [~] **M4** — (Reproducible build, optional) **Deferred / blocked.** Adding `openapi-hs` as a
+      flake input works, but injecting it into the seihou-managed
+      `nix/haskell.nix` `callCabal2nix` from the unmanaged `flake.module.nix` did not succeed
+      (see Surprises). Per the plan's M4 contingency, the dev-shell + `cabal` path remains the
+      supported, fully-green build. M4 wiring fully reverted; dev shell re-verified working.
+- [x] **M5** — Update `CHANGELOG.md` and `README.md` with the concrete outcome and commit.
 
 
 ## Surprises & Discoveries
@@ -139,6 +142,30 @@ implementation. Provide concise evidence.
   `operation-description` / `oas3-missing-example` style hints, explicitly acceptable per the
   M3 plan) and `vacuum` exits 0 — Quality Score 90/100. This is the authoritative, independent
   confirmation that the emitted JSON is a valid OpenAPI 3.1 document.
+
+- **M4 `nix build .#default` could not be wired from `flake.module.nix` (blocker).** The plan's
+  design routes the `openapi-hs` injection through the unmanaged `flake.module.nix`, editing
+  only `flake.nix`'s `inputs`. Adding the input works (`nix flake lock` resolves
+  `github:shinzui/openapi-hs/89e9ed0`). The injection does not: `nix/haskell.nix` builds
+  `packages.default = haskellPackages.callCabal2nix "servant-openapi" inputs.self { }` against
+  `pkgs.haskell.packages."ghc9124"`, a set with no `openapi-hs`, so evaluation fails with
+  `function 'anonymous lambda' called without required argument 'openapi-hs'` (from the
+  generated `cabal2nix-servant-openapi/default.nix`). Two attempts from `flake.module.nix` both
+  failed identically:
+  1. `packages.default = lib.mkForce haskellPackages'.servant-openapi` with `openapi-hs` added
+     via `.override { overrides = … }`. The seihou-managed `nix/haskell.nix` definition of
+     `packages.default` was still evaluated (the flake-parts option merge forced it), hitting
+     the missing-argument error.
+  2. `_module.args.pkgs = lib.mkForce (import inputs.nixpkgs { overlays = [ <ghc9124 + openapi-hs> ]; })`
+     — the overlay did not reach the `pkgs` that `nix/haskell.nix` uses, and worse, this broke
+     `nix develop` too (the dev shell evaluates `packages.default` during flake eval).
+  The only reliable fix found is to edit the seihou-managed `nix/haskell.nix` directly (e.g.
+  override the `ghc9124` set where `haskellPackages` is bound), which the plan's M4 design
+  excludes (it sanctions editing only `flake.nix` inputs). Per the M4 contingency, M4 is left as
+  a tracked blocker. All M4 wiring was reverted (`flake.module.nix` deleted, `flake.nix` input
+  removed, `flake.lock` pruned) and `nix develop` re-verified (GHC 9.12.4, `DEVSHELL_OK`). The
+  library is "working" by the M1–M3 acceptance: dev-shell + `cabal` builds it, the suite passes,
+  and the emitted document is `vacuum`-valid 3.1.
 
 
 ## Decision Log
@@ -234,7 +261,42 @@ Record every decision made while working on the plan.
 Summarize outcomes, gaps, and lessons learned at major milestones or at completion.
 Compare the result against the original purpose.
 
-(To be filled during and after implementation.)
+**Outcome (2026-06-17).** The purpose is met: `servant-openapi` builds against `openapi-hs` and
+emits OpenAPI **3.1** documents (`"openapi": "3.1.0"`), verified beyond compilation by three
+independent validation layers.
+
+- **M1 (library builds).** ✅ `cabal build lib:servant-openapi` links cleanly under
+  `default-language: GHC2024`. One edit: `type_ ?~ OpenApiTypeSingle OpenApiArray`. No
+  `GHC2024`/`MonoLocalBinds` inference breakage occurred.
+- **M2 (tests pass).** ✅ `cabal test spec` → **11 examples, 0 failures**. Two further library
+  edits for new 3.1 record fields (`_openApiWebhooks`, `_pathItemRef`); the only fixture change
+  was the four `"3.0.0"` → `"3.1.0"` version strings. Layers 1 (round-trip) and 2
+  (`validateEveryToJSON`) added and green.
+- **M3 (authoritative conformance).** ✅ `gen-openapi` emits a complete Todo-CRUD document that
+  `vacuum` lints with **0 errors** (28 acceptable style warnings; exit 0; score 90/100).
+- **M4 (Nix build).** ⚠️ **Deferred/blocked** — could not inject `openapi-hs` into the
+  seihou-managed `nix/haskell.nix` `callCabal2nix` from the unmanaged `flake.module.nix`
+  (details in Surprises). Reverted cleanly; dev shell re-verified. The plan anticipated this
+  exact contingency, so it is not a failure of the deliverable — the dev-shell + `cabal` path is
+  the supported build and is fully green.
+- **M5 (docs).** ✅ `CHANGELOG.md` and `README.md` updated with the concrete outcome, a usage
+  example, and the validation story.
+
+**Lessons.** (1) The 3.0→3.1 *data-model* surface that actually touched this code base was tiny
+and entirely in `openapi-hs`'s record shapes — three mechanical edits, all surfaced by the
+compiler/runtime, exactly as the research pass predicted. (2) Equality oracles need care: both
+`InsOrdHashSet`'s index-sensitive `Eq` and aeson's order-insensitive `KeyMap` meant the obvious
+`decode (encode x) == Right x` was wrong; the aeson-`Value` comparison is the correct semantic
+oracle. (3) An external linter's default ruleset (vacuum) conflates style with spec-validity; the
+right response was to emit a genuinely complete document rather than to suppress rules. (4) The
+biggest cost was the optional M4 Nix wiring, blocked by the managed/unmanaged module boundary —
+correctly timeboxed and deferred per the plan.
+
+**Follow-up for a future M4.** The reliable fix is to extend the `ghc9124` Haskell package set
+with `openapi-hs` at the point `nix/haskell.nix` binds `haskellPackages` — which currently means
+editing that seihou-managed file (accepting a future migration conflict), or having the
+`haskell-nix-dev` base flake expose an option to inject extra Haskell packages into the set used
+by `callCabal2nix`.
 
 
 ## Context and Orientation

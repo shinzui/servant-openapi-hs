@@ -52,10 +52,49 @@ Requires GHC **9.12.4** or **9.14.1**.
 
 ## Usage
 
-Please refer to the [Haddock documentation](https://hackage.haskell.org/package/servant-openapi3)
-for the upstream package; the API surface is unchanged. Generated specifications
-can be explored interactively in the [Swagger Editor](https://editor.swagger.io/)
-and served via [Swagger UI](https://github.com/swagger-api/swagger-ui).
+Derive an OpenAPI 3.1 document from a Servant API type with `toOpenApi`:
+
+```haskell
+import Data.Aeson (encode)
+import Data.OpenApi (OpenApi)
+import Data.Proxy (Proxy (..))
+import Servant.OpenApi (toOpenApi)
+
+spec :: OpenApi
+spec = toOpenApi (Proxy :: Proxy MyApi)
+-- encode spec  ==>  {"openapi":"3.1.0", ...}
+```
+
+A runnable example lives in [`app/GenOpenApi.hs`](app/GenOpenApi.hs), built as
+the `gen-openapi` executable, which prints a complete Todo-CRUD document:
+
+```bash
+cabal run gen-openapi > openapi.json
+```
+
+The full API surface is unchanged from upstream; see its
+[Haddock documentation](https://hackage.haskell.org/package/servant-openapi3).
+Generated specifications can be explored interactively in the
+[Swagger Editor](https://editor.swagger.io/) and served via
+[Swagger UI](https://github.com/swagger-api/swagger-ui).
+
+## Validation
+
+Generated documents are checked at three levels:
+
+1. **Round-trip** — the test suite decodes each generated document back through
+   `openapi-hs`'s `FromJSON OpenApi`, which rejects any `openapi` version outside
+   `3.1.0 … 3.1.1`, then compares the result for semantic equality.
+2. **Example-conformance** — `Servant.OpenApi.Test.validateEveryToJSON` checks
+   that random values of each response type validate against the generated
+   schema.
+3. **Authoritative conformance** — the `gen-openapi` output lints cleanly under
+   [`vacuum`](https://quobix.com/vacuum/):
+
+   ```bash
+   cabal run gen-openapi > openapi.json
+   nix run nixpkgs#vacuum-go -- lint -d openapi.json
+   ```
 
 ## Contributing
 
