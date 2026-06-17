@@ -71,11 +71,11 @@ This section must always reflect the actual current state of the work.
 - [x] **M2** — Added Layer-2 validation: `validateEveryToJSON (Proxy :: Proxy ValidationAPI)`
       over a sample `Health` API with `Arbitrary`/`ToJSON`/`ToSchema` instances (100 cases). ✅
 - [x] **M2** — `cabal test spec` passes — 11 examples, 0 failures. ✅
-- [ ] **M3** — Add an `exe:gen-openapi` component that emits a representative API's document as
-      JSON to stdout (`app/GenOpenApi.hs`).
-- [ ] **M3** — Layer-3 validation: `cabal run gen-openapi > openapi.json` then
-      `nix run nixpkgs#vacuum-go -- lint -d openapi.json` reports no errors (authoritative
-      OpenAPI 3.1 conformance).
+- [x] **M3** — Added an `exe:gen-openapi` component (`app/GenOpenApi.hs`) emitting a complete
+      Todo CRUD document (info, server, tags, unique operationIds) to stdout. ✅
+- [x] **M3** — Layer-3 validation: `cabal run gen-openapi > openapi.json` then
+      `nix run nixpkgs#vacuum-go -- lint -d openapi.json` reports **0 errors** (28 style warnings
+      about missing descriptions/examples; vacuum exits 0; Quality Score 90/100). ✅
 - [ ] **M4** — (Reproducible build) Add `flake.module.nix` providing an `openapi-hs` package
       override so `nix build .#default` builds the library through Nix.
 - [ ] **M5** — Update `CHANGELOG.md` and `README.md` with the concrete outcome and commit.
@@ -126,6 +126,19 @@ implementation. Provide concise evidence.
   order-insensitive for objects but order-sensitive for arrays (`required`, `enum`, tag lists),
   so it is the precise semantic-equality oracle, and it still forces a decode through
   `openapi-hs`'s version-enforcing `FromJSON OpenApi`. Result: 11 examples, 0 failures.
+
+- **`vacuum`'s default ruleset rates style rules as "errors" (M3).** The bare document
+  `toOpenApi` produces (no `operationId`, no `servers`, empty `info.title`/`version`) made
+  `vacuum lint` report 6 "errors" and exit 1. None were OpenAPI-3.1 *spec-validity* violations —
+  `operationId` and `servers` are optional in the spec; `vacuum`'s recommended ruleset simply
+  rates `operation-operationId` and `oas3-api-servers` at error severity. Evidence: `vacuum`'s
+  own structural **Validation** category showed `0 errors` even in that run. Rather than
+  suppress rules, the `gen-openapi` generator was made to emit a *complete* contract (real
+  `info`, a `server`, `tags`, and a unique `operationId` per operation via a `paths`/`imap`
+  lens pass). The enriched document lints to **0 errors, 28 warnings** (all
+  `operation-description` / `oas3-missing-example` style hints, explicitly acceptable per the
+  M3 plan) and `vacuum` exits 0 — Quality Score 90/100. This is the authoritative, independent
+  confirmation that the emitted JSON is a valid OpenAPI 3.1 document.
 
 
 ## Decision Log
