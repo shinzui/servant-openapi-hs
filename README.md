@@ -34,13 +34,16 @@ A generated specification can then be used to
 
 ## Installation
 
-`servant-openapi` and its dependency `openapi-hs` are not yet on Hackage. Pin
-both from source. With Cabal, add a `source-repository-package` for each to your
-`cabal.project` and depend on the package as usual:
+`servant-openapi` is available on [Hackage](https://hackage.haskell.org/package/servant-openapi).
+Add it to your package's `build-depends`:
 
 ```cabal
 build-depends: servant-openapi
 ```
+
+Its OpenAPI 3.1 data model comes from
+[`openapi-hs`](https://hackage.haskell.org/package/openapi-hs), which is pulled
+in automatically as a transitive dependency.
 
 Import the umbrella module:
 
@@ -49,6 +52,10 @@ import Servant.OpenApi
 ```
 
 Requires GHC **9.12.4** or **9.14.1**.
+
+> **Building from source.** To track unreleased changes, pin both packages by
+> git revision with a `source-repository-package` stanza in your `cabal.project`
+> (this repository's own `cabal.project` does so for development).
 
 ## Usage
 
@@ -72,8 +79,8 @@ the `gen-openapi` executable, which prints a complete Todo-CRUD document:
 cabal run gen-openapi > openapi.json
 ```
 
-The full API surface is unchanged from upstream; see its
-[Haddock documentation](https://hackage.haskell.org/package/servant-openapi3).
+The full API surface is unchanged from upstream; see the
+[Haddock documentation](https://hackage.haskell.org/package/servant-openapi).
 Generated specifications can be explored interactively in the
 [Swagger Editor](https://editor.swagger.io/) and served via
 [Swagger UI](https://github.com/swagger-api/swagger-ui).

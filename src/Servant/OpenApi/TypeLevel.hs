@@ -1,7 +1,7 @@
 -- |
 -- Module:      Servant.OpenApi.TypeLevel
 -- License:     BSD3
--- Maintainer:  Nickolay Kudasov <nickolay@getshoptv.com>
+-- Maintainer:  Nadeem Bitar <nadeem@gmail.com>
 -- Stability:   experimental
 --
 -- Useful type families for servant APIs.

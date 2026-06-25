@@ -1,7 +1,7 @@
 -- |
 -- Module:      Servant.OpenApi.Test
 -- License:     BSD3
--- Maintainer:  Nickolay Kudasov <nickolay@getshoptv.com>
+-- Maintainer:  Nadeem Bitar <nadeem@gmail.com>
 -- Stability:   experimental
 --
 -- Automatic tests for servant API against OpenApi spec.

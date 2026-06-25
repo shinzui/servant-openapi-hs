@@ -1,7 +1,7 @@
 -- |
 -- Module:      Servant.OpenApi
 -- License:     BSD3
--- Maintainer:  Nickolay Kudasov <nickolay@getshoptv.com>
+-- Maintainer:  Nadeem Bitar <nadeem@gmail.com>
 -- Stability:   experimental
 --
 -- This module provides means to generate and manipulate
@@ -14,7 +14,7 @@
 -- and OpenApi-Codegen to generate clients in various languages.
 -- Additional utilities can also take advantage of the resulting files, such as testing tools.
 --
--- For more information see <http://swagger.io/ OpenApi documentation>.
+-- For more information see the <https://spec.openapis.org/oas/v3.1.0 OpenAPI 3.1 specification>.
 module Servant.OpenApi (
   -- * How to use this library
   -- $howto

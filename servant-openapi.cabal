@@ -31,7 +31,7 @@ build-type:          Simple
 tested-with:
   GHC ==9.12.4 || ==9.14.1
 
-extra-source-files:
+extra-doc-files:
     README.md
   , CHANGELOG.md
 
@@ -69,8 +69,8 @@ library
                      , text                      >=1.2.3.0  && <3
                      , unordered-containers      >=0.2.9.0  && <0.3
 
-                     , hspec
-                     , QuickCheck
+                     , hspec                     >=2.6.0    && <2.12
+                     , QuickCheck                >=2.9      && <2.17
   default-language:    GHC2024
 
 executable gen-openapi
