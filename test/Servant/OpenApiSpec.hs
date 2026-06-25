@@ -1,6 +1,5 @@
 {-# LANGUAGE CPP                #-}
 {-# LANGUAGE DataKinds          #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE QuasiQuotes        #-}
@@ -13,6 +12,7 @@ module Servant.OpenApiSpec where
 
 import           Control.Lens
 import           Data.Aeson                    (ToJSON (toJSON), Value, eitherDecode, encode, genericToJSON)
+import           Data.Aeson.Lens               (key, members, _String)
 import           Data.Aeson.QQ.Simple
 import qualified Data.Aeson.Types              as JSON
 import           Data.Char                     (toLower)
@@ -21,11 +21,9 @@ import           Data.OpenApi
 import           Data.Proxy
 import           Data.Text                     (Text)
 import           Data.Time
-import           Data.Typeable                 (Typeable)
 import           GHC.Generics
 import           Servant.API
 import           Servant.OpenApi
-import           Servant.OpenApi.Test          (validateEveryToJSON)
 import           Servant.Test.ComprehensiveAPI (comprehensiveAPI)
 import           Test.Hspec                    hiding (example)
 import           Test.QuickCheck               (Arbitrary (..))
@@ -43,8 +41,11 @@ spec = do
     it "Hackage API (with tags)" $ checkOpenApi hackageOpenApiWithTags hackageAPI
     it "GetPost API (test subOperations)" $ checkOpenApi getPostOpenApi getPostAPI
     it "Comprehensive API" $ do
-      let _x = toOpenApi comprehensiveAPI
-      True `shouldBe` True -- type-level test
+      -- Exercising every servant combinator must not merely compile: it must
+      -- still emit a valid 3.1 document with a non-empty set of paths.
+      let doc = toJSON (toOpenApi comprehensiveAPI)
+      doc ^? key "openapi" . _String `shouldBe` Just "3.1.0"
+      lengthOf (key "paths" . members) doc `shouldSatisfy` (> 0)
 #if MIN_VERSION_servant(0,18,1)
     it "UVerb API" $ checkOpenApi uverbOpenApi uverbAPI
 #endif
@@ -66,6 +67,21 @@ spec = do
   -- against the *generated* schema, proving the schemas describe the data.
   describe "validateEveryToJSON (schemas describe their data)" $
     validateEveryToJSON (Proxy :: Proxy ValidationAPI)
+
+  -- The 3.1-specific rendering this fork exists to provide, asserted directly
+  -- on the generated JSON so a regression to 3.0 output fails loudly.
+  describe "OpenAPI 3.1 rendering" $ do
+    it "declares openapi version 3.1.0" $
+      toJSON (toOpenApi (Proxy :: Proxy TodoAPI)) ^? key "openapi" . _String
+        `shouldBe` Just "3.1.0"
+
+    it "expresses nullability as a type array, not a `nullable` keyword" $ do
+      let doc      = toJSON (toOpenApi (Proxy :: Proxy NullableAPI))
+          nickName = doc ^? key "components" . key "schemas" . key "Nickname"
+      -- 3.1: nullability lives in the type array @["string","null"]@ ...
+      (nickName >>= (^? key "type")) `shouldBe` Just (toJSON ["string", "null" :: Text])
+      -- ... and the 3.0-only @nullable@ keyword must not be emitted anywhere.
+      (nickName >>= (^? key "nullable")) `shouldBe` Nothing
 
 -- | Layer 1 assertion: a document survives a parse by openapi-hs's
 -- @FromJSON OpenApi@ — which rejects any version outside 3.1.0 .. 3.1.1 — and
@@ -99,7 +115,7 @@ main = hspec spec
 data Health = Health
   { status :: String
   , uptime :: Int
-  } deriving (Eq, Show, Generic, Typeable)
+  } deriving (Eq, Show, Generic)
 
 instance ToJSON Health
 instance ToSchema Health
@@ -109,6 +125,24 @@ instance Arbitrary Health where
 type ValidationAPI =
        "health" :> Get '[JSON] Health
   :<|> "health" :> ReqBody '[JSON] Health :> Post '[JSON] Health
+
+-- =======================================================================
+-- Nullable API (OpenAPI 3.1 type-array nullability)
+-- =======================================================================
+
+-- | A type whose schema is explicitly nullable. Under OpenAPI 3.1 this must
+-- render as @"type": ["string","null"]@ rather than the 3.0 @nullable: true@,
+-- so it pins the headline difference between this fork and its 3.0 upstream.
+newtype Nickname = Nickname (Maybe Text) deriving (Generic)
+
+instance ToJSON Nickname
+
+instance ToSchema Nickname where
+  declareNamedSchema _ = pure $
+    NamedSchema (Just "Nickname") $
+      mempty & type_ ?~ OpenApiTypeArray [OpenApiString, OpenApiNull]
+
+type NullableAPI = "nick" :> Get '[JSON] Nickname
 
 -- =======================================================================
 -- Todo API
