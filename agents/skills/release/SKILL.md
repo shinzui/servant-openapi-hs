@@ -1,18 +1,18 @@
 ---
 name: release
-description: Cut a release of the servant-openapi package and publish it to Hackage following the Haskell PVP. Walks through computing the version bump, updating the cabal version and changelog, running the format/build/test/flake-check gates, committing, tagging, pushing, uploading to Hackage, and creating the GitHub release.
+description: Cut a release of the servant-openapi-hs package and publish it to Hackage following the Haskell PVP. Walks through computing the version bump, updating the cabal version and changelog, running the format/build/test/flake-check gates, committing, tagging, pushing, uploading to Hackage, and creating the GitHub release.
 argument-hint: "[major|minor|patch]"
 disable-model-invocation: true
 allowed-tools: Read, Bash, Edit, Glob, Grep, Write, AskUserQuestion
 ---
 
-# Release `servant-openapi` to Hackage
+# Release `servant-openapi-hs` to Hackage
 
-This skill releases **`servant-openapi`** — a single-package Cabal project — to
+This skill releases **`servant-openapi-hs`** — a single-package Cabal project — to
 [Hackage](https://hackage.haskell.org/) following the Haskell
 [Package Versioning Policy (PVP)](https://pvp.haskell.org/).
 
-The package lives at the repository root (`servant-openapi.cabal`) and contains
+The package lives at the repository root (`servant-openapi-hs.cabal`) and contains
 three components that all ship together in one sdist:
 
 - the **library** (`Servant.OpenApi.*`) — the published API;
@@ -20,7 +20,7 @@ three components that all ship together in one sdist:
   conformance generator;
 - the **`spec` test-suite** (`test/`) — hspec tests.
 
-There is exactly one publishable unit (`servant-openapi`); the executable and
+There is exactly one publishable unit (`servant-openapi-hs`); the executable and
 test-suite are components of that same package, not separate Hackage packages.
 **Nothing is excluded or split out**, so there is no multi-package dependency
 order to manage.
@@ -56,7 +56,7 @@ git tag --list
 ```
 
 - If a previous tag exists, review `git log <last-tag>..HEAD` and
-  `git diff <last-tag>..HEAD -- servant-openapi.cabal src` to classify the
+  `git diff <last-tag>..HEAD -- servant-openapi-hs.cabal src` to classify the
   changes (API additions, breakages, or non-API).
 - If there are **no tags yet** (first release), the working `CHANGELOG.md` top
   section and the current cabal `version:` describe the release-in-progress.
@@ -66,7 +66,7 @@ git tag --list
 Read the current version:
 
 ```bash
-grep -m1 '^version:' servant-openapi.cabal
+grep -m1 '^version:' servant-openapi-hs.cabal
 ```
 
 ### 2. Compute the PVP bump
@@ -82,7 +82,7 @@ Get explicit confirmation before editing any file.
 
 ### 3. Update the cabal version
 
-Edit `servant-openapi.cabal`:
+Edit `servant-openapi-hs.cabal`:
 
 - Set `version:` to the new version.
 - If GHC support changed, update the `tested-with:` line.
@@ -133,7 +133,7 @@ Optionally validate the package as Hackage will see it:
 
 ```bash
 cabal check          # warns about anything Hackage would reject
-cabal sdist          # produces dist-newstyle/sdist/servant-openapi-<version>.tar.gz
+cabal sdist          # produces dist-newstyle/sdist/servant-openapi-hs-<version>.tar.gz
 ```
 
 ### 6. Commit, tag, push
@@ -142,11 +142,11 @@ Use a Conventional Commits message for the release commit (this repo follows
 Conventional Commits — recent history uses `chore(release): ...`):
 
 ```bash
-git add servant-openapi.cabal CHANGELOG.md
-git commit -m "chore(release): servant-openapi <new-version>"
+git add servant-openapi-hs.cabal CHANGELOG.md
+git commit -m "chore(release): servant-openapi-hs <new-version>"
 
 # Annotated tag, v<version> format
-git tag -a v<new-version> -m "servant-openapi <new-version>"
+git tag -a v<new-version> -m "servant-openapi-hs <new-version>"
 
 git push origin HEAD
 git push origin v<new-version>
@@ -163,15 +163,15 @@ Hackage); `--publish` makes the release permanent and **irreversible**.
 cabal sdist
 
 # (optional, recommended) upload a candidate first and inspect it on Hackage
-cabal upload dist-newstyle/sdist/servant-openapi-<new-version>.tar.gz
+cabal upload dist-newstyle/sdist/servant-openapi-hs-<new-version>.tar.gz
 
 # Publish the package (irreversible)
-cabal upload --publish dist-newstyle/sdist/servant-openapi-<new-version>.tar.gz
+cabal upload --publish dist-newstyle/sdist/servant-openapi-hs-<new-version>.tar.gz
 
 # Build and publish the Haddock documentation
 cabal haddock --haddock-for-hackage --enable-doc
 cabal upload --publish --documentation \
-  dist-newstyle/servant-openapi-<new-version>-docs.tar.gz
+  dist-newstyle/servant-openapi-hs-<new-version>-docs.tar.gz
 ```
 
 Hackage credentials come from `~/.cabal/config` or a `HACKAGE_KEY` / interactive
@@ -182,7 +182,7 @@ to the operator rather than guessing.
 
 ```bash
 gh release create v<new-version> \
-  --title "servant-openapi <new-version>" \
+  --title "servant-openapi-hs <new-version>" \
   --notes "$(sed -n '/^<new-version>$/,/^---$/p' CHANGELOG.md)"
 ```
 

@@ -1,7 +1,7 @@
 4.0.0
 -----
 
-* Renamed to `servant-openapi`, a fork of
+* Renamed to `servant-openapi-hs`, a fork of
   [`biocad/servant-openapi3`](https://github.com/biocad/servant-openapi3)
   targeting OpenAPI 3.1.
 * Depend on [`openapi-hs`](https://github.com/shinzui/openapi-hs) instead of

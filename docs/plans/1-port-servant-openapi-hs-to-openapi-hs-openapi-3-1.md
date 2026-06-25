@@ -1,13 +1,13 @@
 ---
 id: 1
-slug: port-servant-openapi-to-openapi-hs-openapi-3-1
-title: "Port servant-openapi to openapi-hs (OpenAPI 3.1)"
+slug: port-servant-openapi-hs-to-openapi-hs-openapi-3-1
+title: "Port servant-openapi-hs to openapi-hs (OpenAPI 3.1)"
 kind: exec-plan
 created_at: 2026-06-17T19:52:07Z
 intention: "intention_01kvbj3110eanbcej7x38w161z"
 ---
 
-# Port servant-openapi to openapi-hs (OpenAPI 3.1)
+# Port servant-openapi-hs to openapi-hs (OpenAPI 3.1)
 
 This ExecPlan is a living document. The sections Progress, Surprises & Discoveries,
 Decision Log, and Outcomes & Retrospective must be kept up to date as work proceeds.
@@ -15,7 +15,7 @@ Decision Log, and Outcomes & Retrospective must be kept up to date as work proce
 
 ## Purpose / Big Picture
 
-`servant-openapi` is a Haskell library that takes the *type* of a web API written with the
+`servant-openapi-hs` is a Haskell library that takes the *type* of a web API written with the
 [Servant](https://github.com/haskell-servant/servant) framework and automatically produces a
 machine-readable description of that API in the **OpenAPI** format (a JSON/YAML document that
 tools use to render docs, generate clients, and validate requests). It is a fork of the
@@ -44,7 +44,7 @@ library builds against `openapi-hs`, the test suite passes, and a generated spec
 OpenAPI 3.1 document.
 
 The dependency name swap (`openapi3` → `openapi-hs`) and the package rename
-(`servant-openapi3` → `servant-openapi`) were already completed in the commit that created this
+(`servant-openapi3` → `servant-openapi-hs`) were already completed in the commit that created this
 fork; this plan covers making the code actually **build and pass its tests** against
 `openapi-hs`, plus reproducible-build wiring and final documentation.
 
@@ -57,7 +57,7 @@ This section must always reflect the actual current state of the work.
 
 - [x] **M1** — Enter the dev shell and confirm the toolchain (GHC 9.12.4, cabal 3.16.1.0) and
       that `openapi-hs` resolves from the `cabal.project` git pin. ✅
-- [x] **M1** — `cabal build lib:servant-openapi` compiles the library against `openapi-hs`
+- [x] **M1** — `cabal build lib:servant-openapi-hs` compiles the library against `openapi-hs`
       under `default-language: GHC2024`. One source edit needed (`OpenApiTypeSingle`, see
       Surprises). ✅
 - [x] **M2** — `cabal build` compiles the `spec` test suite (test-only deps resolve). Two more
@@ -147,12 +147,12 @@ implementation. Provide concise evidence.
   design routes the `openapi-hs` injection through the unmanaged `flake.module.nix`, editing
   only `flake.nix`'s `inputs`. Adding the input works (`nix flake lock` resolves
   `github:shinzui/openapi-hs/89e9ed0`). The injection does not: `nix/haskell.nix` builds
-  `packages.default = haskellPackages.callCabal2nix "servant-openapi" inputs.self { }` against
+  `packages.default = haskellPackages.callCabal2nix "servant-openapi-hs" inputs.self { }` against
   `pkgs.haskell.packages."ghc9124"`, a set with no `openapi-hs`, so evaluation fails with
   `function 'anonymous lambda' called without required argument 'openapi-hs'` (from the
-  generated `cabal2nix-servant-openapi/default.nix`). Two attempts from `flake.module.nix` both
+  generated `cabal2nix-servant-openapi-hs/default.nix`). Two attempts from `flake.module.nix` both
   failed identically:
-  1. `packages.default = lib.mkForce haskellPackages'.servant-openapi` with `openapi-hs` added
+  1. `packages.default = lib.mkForce haskellPackages'.servant-openapi-hs` with `openapi-hs` added
      via `.override { overrides = … }`. The seihou-managed `nix/haskell.nix` definition of
      `packages.default` was still evaluated (the flake-parts option merge forced it), hitting
      the missing-argument error.
@@ -189,7 +189,7 @@ Record every decision made while working on the plan.
   Date: 2026-06-17
 
 - Decision: Set the package's `default-language` to `GHC2024` (both the `library` and the
-  `spec` test stanzas in `servant-openapi.cabal`), replacing `Haskell2010`.
+  `spec` test stanzas in `servant-openapi-hs.cabal`), replacing `Haskell2010`.
   Rationale: Part of modernizing the fork onto the GHC 9.12.4 / 9.14.1 toolchain. `GHC2024`
   is the current language edition and is available on GHC ≥ 9.10, so it is safe for our
   targets. It enables a large set of extensions by default (see Context), which removes the
@@ -261,11 +261,11 @@ Record every decision made while working on the plan.
 Summarize outcomes, gaps, and lessons learned at major milestones or at completion.
 Compare the result against the original purpose.
 
-**Outcome (2026-06-17).** The purpose is met: `servant-openapi` builds against `openapi-hs` and
+**Outcome (2026-06-17).** The purpose is met: `servant-openapi-hs` builds against `openapi-hs` and
 emits OpenAPI **3.1** documents (`"openapi": "3.1.0"`), verified beyond compilation by three
 independent validation layers.
 
-- **M1 (library builds).** ✅ `cabal build lib:servant-openapi` links cleanly under
+- **M1 (library builds).** ✅ `cabal build lib:servant-openapi-hs` links cleanly under
   `default-language: GHC2024`. One edit: `type_ ?~ OpenApiTypeSingle OpenApiArray`. No
   `GHC2024`/`MonoLocalBinds` inference breakage occurred.
 - **M2 (tests pass).** ✅ `cabal test spec` → **11 examples, 0 failures**. Two further library
@@ -303,7 +303,7 @@ by `callCabal2nix`.
 
 This section assumes no prior knowledge of this repository. Read it fully before editing.
 
-**What this repository is.** The working directory is the `servant-openapi` package (formerly
+**What this repository is.** The working directory is the `servant-openapi-hs` package (formerly
 `servant-openapi3`). Its job is to convert a Servant API type into an OpenAPI document. The
 public entry points live in `src/Servant/OpenApi.hs` (re-exports) and the real logic in
 `src/Servant/OpenApi/Internal.hs`. Supporting modules:
@@ -316,7 +316,7 @@ public entry points live in `src/Servant/OpenApi.hs` (re-exports) and the real l
   APIs, generates their OpenAPI documents, and compares the produced JSON against hand-written
   expected JSON literals. `test/Spec.hs` is the one-line `hspec-discover` driver.
 
-**The dependency that changed.** The package `cabal` file `servant-openapi.cabal` already
+**The dependency that changed.** The package `cabal` file `servant-openapi-hs.cabal` already
 depends on `openapi-hs >=4.0 && <5` (not `openapi3`). `cabal.project` pins `openapi-hs` from
 git. The Haskell modules of `openapi-hs` keep the **same names** as the old `openapi3`
 (`Data.OpenApi`, `Data.OpenApi.Declare`, `Data.OpenApi.Schema.Validation`), so the `import`
@@ -358,7 +358,7 @@ can affect *generated output* (and therefore the expected-JSON literals in the t
    form, retained) — so no library change is expected there.
 
 **Term: "language edition" and `GHC2024`.** A Haskell *language edition* is a named bundle of
-language extensions that are turned on by default for a whole package. `servant-openapi.cabal`
+language extensions that are turned on by default for a whole package. `servant-openapi-hs.cabal`
 sets `default-language: GHC2024` in both the `library` and the `spec` test stanzas (replacing
 the older `Haskell2010`). `GHC2024` is the modern edition supported on GHC ≥ 9.10, so it is
 valid for our 9.12.4 / 9.14.1 targets. It enables by default many extensions this code base
@@ -387,11 +387,11 @@ third makes the Nix package build reproducible; the fourth records the result.
 ### Milestone M1 — Library compiles against openapi-hs
 
 Scope: get the library (not yet the tests) to compile. At the end, `cabal build
-lib:servant-openapi` succeeds inside the dev shell, proving the `openapi-hs` git pin resolves
+lib:servant-openapi-hs` succeeds inside the dev shell, proving the `openapi-hs` git pin resolves
 and the library source is API-compatible with `openapi-hs`.
 
 This milestone also exercises the new `default-language: GHC2024` setting (already committed in
-`servant-openapi.cabal`): the library now compiles under the `GHC2024` language edition rather
+`servant-openapi-hs.cabal`): the library now compiles under the `GHC2024` language edition rather
 than `Haskell2010`. Because research showed the library imports only names that still exist in
 `openapi-hs`, the expectation is **zero or very few** source edits. If the compiler reports an
 error, it will be either (a) one of the 3.0→3.1 removals listed in Context (a reference to
@@ -409,7 +409,7 @@ equivalent:
   `Just (OpenApiItemsBoolean False)`.
 
 Record any such edit in Surprises & Discoveries with the compiler message as evidence. Acceptance:
-the `cabal build lib:servant-openapi` transcript ends with `Linking`/no errors.
+the `cabal build lib:servant-openapi-hs` transcript ends with `Linking`/no errors.
 
 ### Milestone M2 — Test suite compiles and passes
 
@@ -457,8 +457,8 @@ capture, and a response record type that has a `ToSchema` instance (a Todo-style
 mirroring the example that the fork removed). Its `main` calls
 `Servant.OpenApi.toOpenApi (Proxy :: Proxy SampleApi)` and prints
 `Data.ByteString.Lazy.Char8.putStrLn (Data.Aeson.encode spec)`. Register it in
-`servant-openapi.cabal` as an `executable gen-openapi` stanza (depends on `base`,
-`servant-openapi`, `openapi-hs`, `aeson`, `bytestring`, `servant`, `text`; `default-language:
+`servant-openapi-hs.cabal` as an `executable gen-openapi` stanza (depends on `base`,
+`servant-openapi-hs`, `openapi-hs`, `aeson`, `bytestring`, `servant`, `text`; `default-language:
 GHC2024`).
 
 Then generate and validate:
@@ -481,7 +481,7 @@ Scope: make `nix build .#default` build the library through Nix, not just the de
 `cabal` path. At the end, `nix build .#default` succeeds.
 
 `nix/haskell.nix` builds the default package with
-`haskellPackages.callCabal2nix "servant-openapi" inputs.self { }`. That call resolves
+`haskellPackages.callCabal2nix "servant-openapi-hs" inputs.self { }`. That call resolves
 dependencies from the nixpkgs Haskell package set, which has no `openapi-hs`. Supply it via the
 **unmanaged** `flake.module.nix` (copy from `flake.module.nix.example`), adding `openapi-hs` as
 a flake input and overriding the package set so `callCabal2nix` finds it. The exact override is
@@ -522,7 +522,7 @@ cabal --version  # expect: cabal-install version 3.x
 time (may take several minutes), then the library:
 
 ```bash
-cabal build lib:servant-openapi
+cabal build lib:servant-openapi-hs
 ```
 
 Expected tail of a successful run:
@@ -595,11 +595,11 @@ ls -l result
 ```bash
 git add -A
 git commit -m "$(cat <<'EOF'
-feat: build servant-openapi against openapi-hs (OpenAPI 3.1)
+feat: build servant-openapi-hs against openapi-hs (OpenAPI 3.1)
 
 <one or two lines describing the milestone's concrete change>
 
-ExecPlan: docs/plans/1-port-servant-openapi-to-openapi-hs-openapi-3-1.md
+ExecPlan: docs/plans/1-port-servant-openapi-hs-to-openapi-hs-openapi-3-1.md
 Intention: intention_01kvbj3110eanbcej7x38w161z
 EOF
 )"
@@ -613,7 +613,7 @@ spec validation. "Validation" here means proving the generated document is genui
 OpenAPI 3.1 document, not merely that it equals a JSON literal we wrote by hand (which could be
 wrong). Each layer catches what the previous one cannot.
 
-**Build.** `cabal build lib:servant-openapi` succeeds inside the dev shell. This fails today
+**Build.** `cabal build lib:servant-openapi-hs` succeeds inside the dev shell. This fails today
 only because nothing has built the new dependency yet; after M1 it links cleanly. The
 generator and tests build too (`cabal build all`).
 
@@ -676,7 +676,7 @@ If a build gets into a confusing state, clear the local build products and rebui
 
 ```bash
 cabal clean
-cabal build lib:servant-openapi
+cabal build lib:servant-openapi-hs
 ```
 
 The Nix step (M4) is additive: `flake.module.nix` is unmanaged and can be deleted to revert to
@@ -723,9 +723,9 @@ keeps the same surface as upstream `servant-openapi3`; the milestones must not c
   `vacuum`). Not added to the dev shell; invoked on demand via `nix run`.
 
 **Generator component (new in this plan).** `app/GenOpenApi.hs` with an `executable gen-openapi`
-stanza in `servant-openapi.cabal`. It must define a self-contained sample Servant API and a
+stanza in `servant-openapi-hs.cabal`. It must define a self-contained sample Servant API and a
 `main :: IO ()` that prints `Data.Aeson.encode (Servant.OpenApi.toOpenApi (Proxy :: Proxy
-SampleApi))` to stdout. Build-depends: `base`, `servant-openapi`, `openapi-hs`, `aeson`,
+SampleApi))` to stdout. Build-depends: `base`, `servant-openapi-hs`, `openapi-hs`, `aeson`,
 `bytestring`, `servant`, `text`; `default-language: GHC2024`.
 
 **M4 Nix override.** `flake.module.nix` (copied from `flake.module.nix.example`) must add an

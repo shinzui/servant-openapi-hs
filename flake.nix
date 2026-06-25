@@ -1,5 +1,5 @@
 {
-  description = "servant-openapi";
+  description = "servant-openapi-hs";
 
   inputs = {
     haskell-nix-dev.url = "github:shinzui/haskell-nix-dev";

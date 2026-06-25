@@ -1,5 +1,5 @@
 cabal-version:       3.0
-name:                servant-openapi
+name:                servant-openapi-hs
 version:             4.0.0
 synopsis:            Generate an OpenAPI 3.1 specification for your servant API.
 description:
@@ -19,8 +19,8 @@ description:
   This package is a fork of
   [@servant-openapi3@](https://github.com/biocad/servant-openapi3) that targets
   OpenAPI 3.1 via [@openapi-hs@](https://github.com/shinzui/openapi-hs).
-homepage:            https://github.com/shinzui/servant-openapi
-bug-reports:         https://github.com/shinzui/servant-openapi/issues
+homepage:            https://github.com/shinzui/servant-openapi-hs
+bug-reports:         https://github.com/shinzui/servant-openapi-hs/issues
 license:             BSD-3-Clause
 license-file:        LICENSE
 author:              David Johnson, Nickolay Kudasov, Maxim Koltsov
@@ -37,7 +37,7 @@ extra-doc-files:
 
 source-repository head
   type:     git
-  location: https://github.com/shinzui/servant-openapi.git
+  location: https://github.com/shinzui/servant-openapi-hs.git
 
 library
   ghc-options:         -Wall
@@ -83,7 +83,7 @@ executable gen-openapi
                   , lens
                   , openapi-hs
                   , servant
-                  , servant-openapi
+                  , servant-openapi-hs
                   , text
   default-language: GHC2024
 
@@ -101,7 +101,7 @@ test-suite spec
                   , lens
                   , lens-aeson >=1.0.2    && <1.3
                   , servant
-                  , servant-openapi
+                  , servant-openapi-hs
                   , openapi-hs >= 4.0
                   , text
                   , template-haskell

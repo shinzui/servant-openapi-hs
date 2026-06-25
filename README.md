@@ -1,4 +1,4 @@
-# servant-openapi
+# servant-openapi-hs
 
 [![License BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](/LICENSE)
 
@@ -6,14 +6,14 @@ Generate an [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) specification fo
 your [Servant](https://github.com/haskell-servant/servant) API, and partially
 test that the API conforms to its specification.
 
-> **Fork notice.** `servant-openapi` is a fork of
+> **Fork notice.** `servant-openapi-hs` is a fork of
 > [`biocad/servant-openapi3`](https://github.com/biocad/servant-openapi3), which
 > targets OpenAPI 3.0. This fork retargets it at OpenAPI 3.1 by building on
 > [`openapi-hs`](https://github.com/shinzui/openapi-hs) (a fork of
 > [`biocad/openapi3`](https://github.com/biocad/openapi3)) instead of `openapi3`.
 > The Haskell module namespace is unchanged (`Servant.OpenApi.*`), and because
 > `openapi-hs` keeps the `Data.OpenApi.*` namespace, migrating is usually just a
-> dependency-name swap: `servant-openapi3` → `servant-openapi` and `openapi3` →
+> dependency-name swap: `servant-openapi3` → `servant-openapi-hs` and `openapi3` →
 > `openapi-hs`. The fork keeps the upstream [BSD-3-Clause license](#license) and
 > copyright.
 
@@ -39,10 +39,10 @@ A generated specification can then be used to
 > [Building from source](#building-from-source) below); the instructions in this
 > section describe the package once it is on Hackage.
 
-Add `servant-openapi` to your package's `build-depends`:
+Add `servant-openapi-hs` to your package's `build-depends`:
 
 ```cabal
-build-depends: servant-openapi
+build-depends: servant-openapi-hs
 ```
 
 Its OpenAPI 3.1 data model comes from
@@ -60,12 +60,12 @@ Requires GHC **9.12.4** or **9.14.1**.
 <a id="building-from-source"></a>
 > **Building from source.** Until the first Hackage release, depend on this
 > repository directly by adding a `source-repository-package` stanza for
-> `servant-openapi` to your `cabal.project`:
+> `servant-openapi-hs` to your `cabal.project`:
 >
 > ```cabal
 > source-repository-package
 >     type:     git
->     location: https://github.com/shinzui/servant-openapi.git
+>     location: https://github.com/shinzui/servant-openapi-hs.git
 >     tag:      <commit-sha>
 > ```
 >
@@ -94,7 +94,7 @@ cabal run gen-openapi > openapi.json
 ```
 
 The full API surface is unchanged from upstream; see the
-[Haddock documentation](https://hackage.haskell.org/package/servant-openapi).
+[Haddock documentation](https://hackage.haskell.org/package/servant-openapi-hs).
 Generated specifications can be explored interactively in any OpenAPI 3.1
 viewer or editor.
 
@@ -120,11 +120,11 @@ Generated documents are checked at three levels:
 
 Bug reports, fixes, documentation improvements, and other contributions are
 welcome. Please open an issue or pull request on the
-[GitHub issue tracker](https://github.com/shinzui/servant-openapi/issues).
+[GitHub issue tracker](https://github.com/shinzui/servant-openapi-hs/issues).
 
 ## License
 
-`servant-openapi` retains the original **BSD-3-Clause** license of the upstream
+`servant-openapi-hs` retains the original **BSD-3-Clause** license of the upstream
 [`servant-openapi3`](https://github.com/biocad/servant-openapi3) project,
 including its copyright. See the [`LICENSE`](/LICENSE) file for the full text;
 this fork's changes are released under the same terms.
