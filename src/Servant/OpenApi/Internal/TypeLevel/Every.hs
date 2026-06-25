@@ -16,10 +16,12 @@
 #if __GLASGOW_HASKELL__ >= 800
 {-# LANGUAGE UndecidableSuperClasses #-}
 #endif
+-- | Apply a list of constraint constructors to a type, as a type family and as
+-- a class. Not subject to the PVP; import "Servant.OpenApi.TypeLevel" instead.
 module Servant.OpenApi.Internal.TypeLevel.Every where
 
+import           Data.Kind                               (Constraint, Type)
 import           Data.Proxy
-import           GHC.Exts                                (Constraint)
 
 import           Servant.OpenApi.Internal.TypeLevel.TMap
 
@@ -48,7 +50,7 @@ type family EveryTF cs x :: Constraint where
 -- | Apply multiple constraint constructors to a type as a class.
 --
 -- This is different from @'EveryTF'@ in that it allows partial application.
-class EveryTF cs x => Every (cs :: [* -> Constraint]) (x :: *) where
+class EveryTF cs x => Every (cs :: [Type -> Constraint]) (x :: Type) where
 
 instance Every '[] x where
 instance (c x, Every cs x) => Every (c ': cs) x where

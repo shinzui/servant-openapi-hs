@@ -2,6 +2,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+-- | Orphan instances needed to derive OpenAPI documents for servant APIs.
+-- Not subject to the PVP; import "Servant.OpenApi" instead.
 module Servant.OpenApi.Internal.Orphans where
 
 import Data.OpenApi

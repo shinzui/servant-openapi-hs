@@ -6,13 +6,12 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
+-- | Type families that enumerate the endpoints of a servant API and decide
+-- sub-API membership. Not subject to the PVP; import "Servant.OpenApi.TypeLevel".
 module Servant.OpenApi.Internal.TypeLevel.API where
 
-import           GHC.Exts            (Constraint)
+import           Data.Kind           (Constraint, Type)
 import           Servant.API
-#if MIN_VERSION_servant(0,19,0)
-import           Servant.API.Generic (ToServantApi)
-#endif
 
 -- | Build a list of endpoints from an API.
 type family EndpointsList api where
@@ -82,10 +81,10 @@ type AddBodyType c cs a as = If (Elem c cs) (a ': as) as
 -- | Extract a list of "body" types for a specific content-type from a servant API.
 -- To extract unique types see @'BodyTypes'@.
 --
--- @'NoContent'@ is removed from the list and not tested.  (This allows for leaving the body
+-- @t'NoContent'@ is removed from the list and not tested.  (This allows for leaving the body
 -- completely empty on responses to requests that only accept 'application/json', while
 -- setting the content-type in the response accordingly.)
-type family BodyTypes' c api :: [*] where
+type family BodyTypes' c api :: [Type] where
   BodyTypes' c (Verb verb b cs (Headers hdrs a)) = AddBodyType c cs a '[]
   BodyTypes' c (Verb verb b cs NoContent) = '[]
   BodyTypes' c (Verb verb b cs a) = AddBodyType c cs a '[]

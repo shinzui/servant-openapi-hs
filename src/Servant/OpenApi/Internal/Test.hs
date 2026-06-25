@@ -4,6 +4,8 @@
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators       #-}
+-- | Internal implementation of the response-conformance test helpers.
+-- Not subject to the PVP; import "Servant.OpenApi.Test" instead.
 module Servant.OpenApi.Internal.Test where
 
 import           Data.Aeson                     (ToJSON (..))

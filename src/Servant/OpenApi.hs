@@ -19,7 +19,7 @@ module Servant.OpenApi (
   -- * How to use this library
   -- $howto
 
-  -- ** Generate @'OpenApi'@
+  -- ** Generate @OpenApi@
   -- $generate
 
   -- ** Annotate
@@ -97,7 +97,7 @@ import           Servant.OpenApi.Internal.Orphans ()
 -- @GetUser@ returns a user given his\/her ID. @PostUser@ creates a new user and returns his\/her ID.
 
 -- $generate
--- In order to generate @'OpenApi'@ specification for a servant API, just use @'toOpenApi'@:
+-- In order to generate @OpenApi@ specification for a servant API, just use @'toOpenApi'@:
 --
 -- >>> BSL8.putStrLn $ encodePretty $ toOpenApi (Proxy :: Proxy UserAPI)
 -- {
@@ -212,10 +212,10 @@ import           Servant.OpenApi.Internal.Orphans ()
 --
 -- For some parameters it will also add 400 and/or 404 responses with a description mentioning parameter name.
 --
--- Data schemas come from @'ToParamSchema'@ and @'ToSchema'@ classes.
+-- Data schemas come from @ToParamSchema@ and @ToSchema@ classes.
 
 -- $annotate
--- While initially generated @'OpenApi'@ looks good, it lacks some information it can't get from a servant API.
+-- While initially generated @OpenApi@ looks good, it lacks some information it can't get from a servant API.
 --
 -- We can add this information using field lenses from @"Data.OpenApi"@:
 --
@@ -490,13 +490,13 @@ import           Servant.OpenApi.Internal.Orphans ()
 -- This applies @\"get\"@ tag to the @GET@ endpoints and @\"post\"@ tag to the @POST@ endpoint of the User API.
 
 -- $test
--- Automatic generation of data schemas uses @'ToSchema'@ instances for the types
+-- Automatic generation of data schemas uses @ToSchema@ instances for the types
 -- used in a servant API. But to encode/decode actual data servant uses different classes.
--- For instance in @UserAPI@ @User@ is always encoded/decoded using @'ToJSON'@ and @'FromJSON'@ instances.
+-- For instance in @UserAPI@ @User@ is always encoded/decoded using @ToJSON@ and @FromJSON@ instances.
 --
 -- To be sure your Haskell server/client handles data properly you need to check
--- that @'ToJSON'@ instance always generates values that satisfy schema produced
--- by @'ToSchema'@ instance.
+-- that @ToJSON@ instance always generates values that satisfy schema produced
+-- by @ToSchema@ instance.
 --
 -- With @'validateEveryToJSON'@ it is possible to test all those instances automatically,
 -- without having to write down every type:
@@ -517,7 +517,7 @@ import           Servant.OpenApi.Internal.Orphans ()
 -- Although servant is great, chances are that your API clients don't use Haskell.
 -- In many cases @swagger.json@ serves as a specification, not a Haskell type.
 --
--- In this cases it is a good idea to store generated and annotated @'OpenApi'@ in a @swagger.json@ file
+-- In this cases it is a good idea to store generated and annotated @OpenApi@ in a @swagger.json@ file
 -- under a version control system (such as Git, Subversion, Mercurial, etc.).
 --
 -- It is also recommended to version API based on changes to the @swagger.json@ rather than changes
@@ -526,6 +526,6 @@ import           Servant.OpenApi.Internal.Orphans ()
 -- See <example/test/TodoSpec.hs TodoSpec.hs> for an example of a complete test suite for a swagger specification.
 
 -- $serve
--- If you're implementing a server for an API, you might also want to serve its @'OpenApi'@ specification.
+-- If you're implementing a server for an API, you might also want to serve its @OpenApi@ specification.
 --
 -- See <example/src/Todo.hs Todo.hs> for an example of a server.

@@ -12,6 +12,9 @@
 {-# LANGUAGE UndecidableInstances #-}
 #endif
 {-# OPTIONS_GHC -Wno-orphans #-}
+-- | Internal implementation of the 'HasOpenApi' class and the machinery that
+-- derives an OpenAPI 3.1 document from a servant API type. Not subject to the
+-- PVP; import "Servant.OpenApi" instead.
 module Servant.OpenApi.Internal where
 
 import Prelude ()
@@ -38,9 +41,6 @@ import           Network.HTTP.Media         (MediaType)
 import           Servant.API
 import           Servant.API.Description    (FoldDescription, reflectDescription)
 import           Servant.API.Modifiers      (FoldRequired)
-#if MIN_VERSION_servant(0,19,0)
-import           Servant.API.Generic        (ToServantApi)
-#endif
 
 import           Servant.OpenApi.Internal.TypeLevel.API
 
@@ -49,7 +49,7 @@ import           Servant.OpenApi.Internal.TypeLevel.API
 -- To generate OpenApi specification, your data types need
 -- @'ToParamSchema'@ and/or @'ToSchema'@ instances.
 --
--- @'ToParamSchema'@ is used for @'Capture'@, @'QueryParam'@ and @'Header'@.
+-- @'ToParamSchema'@ is used for @'Capture'@, @'QueryParam'@ and @t'Header'@.
 -- @'ToSchema'@ is used for @'ReqBody'@ and response data types.
 --
 -- You can easily derive those instances via @Generic@.
@@ -103,12 +103,12 @@ mkEndpoint :: forall a cs hs proxy method status.
   -> proxy (Verb method status cs (Headers hs a))  -- ^ Method, content-types, headers and response.
   -> OpenApi
 mkEndpoint path proxy
-  = mkEndpointWithSchemaRef (Just ref) path proxy
-      & components.schemas .~ defs
+  = mkEndpointWithSchemaRef (Just schemaRef) path proxy
+      & components.schemas .~ schemaDefs
   where
-    (defs, ref) = runDeclare (declareSchemaRef (Proxy :: Proxy a)) mempty
+    (schemaDefs, schemaRef) = runDeclare (declareSchemaRef (Proxy :: Proxy a)) mempty
 
--- | Make a singletone 'OpenApi' spec (with only one endpoint) and with no content schema.
+-- | Make a singleton t'OpenApi' spec (with only one endpoint) and with no content schema.
 mkEndpointNoContent :: forall nocontent cs hs proxy method status.
   (AllAccept cs, AllToResponseHeader hs, OpenApiMethod method, KnownNat status)
   => FilePath                                               -- ^ Endpoint path.
@@ -118,7 +118,7 @@ mkEndpointNoContent path proxy
   = mkEndpointWithSchemaRef Nothing path proxy
 
 -- | Like @'mkEndpoint'@ but with explicit schema reference.
--- Unlike @'mkEndpoint'@ this function does not update @'definitions'@.
+-- Unlike @'mkEndpoint'@ this function does not register any schema components.
 mkEndpointWithSchemaRef :: forall cs hs proxy method status a.
   (AllAccept cs, AllToResponseHeader hs, OpenApiMethod method, KnownNat status)
   => Maybe (Referenced Schema)
@@ -259,7 +259,7 @@ instance {-# OVERLAPPABLE #-} (ToSchema a, AllAccept cs, AllToResponseHeader hs,
 -- ATTENTION: do not remove this instance!
 -- A similar instance above will always use the more general
 -- polymorphic -- HasOpenApi instance and will result in a type error
--- since 'NoContent' does not have a 'ToSchema' instance.
+-- since t'NoContent' does not have a 'ToSchema' instance.
 instance (AllAccept cs, KnownNat status, OpenApiMethod method) => HasOpenApi (Verb method status cs NoContent) where
   toOpenApi _ = toOpenApi (Proxy :: Proxy (Verb method status cs (Headers '[] NoContent)))
 
@@ -285,7 +285,7 @@ instance (HasOpenApi sub) => HasOpenApi (IsSecure :> sub) where
 instance (HasOpenApi sub) => HasOpenApi (RemoteHost :> sub) where
   toOpenApi _ = toOpenApi (Proxy :: Proxy sub)
 
--- | @'HttpVersion'@ combinator does not change our specification at all.
+-- | @t'HttpVersion'@ combinator does not change our specification at all.
 instance (HasOpenApi sub) => HasOpenApi (HttpVersion :> sub) where
   toOpenApi _ = toOpenApi (Proxy :: Proxy sub)
 
@@ -396,15 +396,15 @@ instance (ToSchema a, AllAccept cs, HasOpenApi sub, KnownSymbol (FoldDescription
   toOpenApi _ = toOpenApi (Proxy :: Proxy sub)
     & addRequestBody reqBody
     & addDefaultResponse400 tname
-    & components.schemas %~ (<> defs)
+    & components.schemas %~ (<> schemaDefs)
     where
       tname = "body"
       transDesc ""   = Nothing
       transDesc desc = Just (Text.pack desc)
-      (defs, ref) = runDeclare (declareSchemaRef (Proxy :: Proxy a)) mempty
+      (schemaDefs, schemaRef) = runDeclare (declareSchemaRef (Proxy :: Proxy a)) mempty
       reqBody = (mempty :: RequestBody)
         & description .~ transDesc (reflectDescription (Proxy :: Proxy mods))
-        & content .~ InsOrdHashMap.fromList [(t, mempty & schema ?~ ref) | t <- allContentType (Proxy :: Proxy cs)]
+        & content .~ InsOrdHashMap.fromList [(t, mempty & schema ?~ schemaRef) | t <- allContentType (Proxy :: Proxy cs)]
 
 -- | This instance is an approximation.
 --
@@ -413,15 +413,15 @@ instance (ToSchema a, Accept ct, HasOpenApi sub, KnownSymbol (FoldDescription mo
   toOpenApi _ = toOpenApi (Proxy :: Proxy sub)
     & addRequestBody reqBody
     & addDefaultResponse400 tname
-    & components.schemas %~ (<> defs)
+    & components.schemas %~ (<> schemaDefs)
     where
       tname = "body"
       transDesc ""   = Nothing
       transDesc desc = Just (Text.pack desc)
-      (defs, ref) = runDeclare (declareSchemaRef (Proxy :: Proxy a)) mempty
+      (schemaDefs, schemaRef) = runDeclare (declareSchemaRef (Proxy :: Proxy a)) mempty
       reqBody = (mempty :: RequestBody)
         & description .~ transDesc (reflectDescription (Proxy :: Proxy mods))
-        & content .~ InsOrdHashMap.fromList [(t, mempty & schema ?~ ref) | t <- toList $ contentTypes (Proxy :: Proxy ct)]
+        & content .~ InsOrdHashMap.fromList [(t, mempty & schema ?~ schemaRef) | t <- toList $ contentTypes (Proxy :: Proxy ct)]
 
 #if MIN_VERSION_servant(0,18,2)
 instance (HasOpenApi sub) => HasOpenApi (Fragment a :> sub) where

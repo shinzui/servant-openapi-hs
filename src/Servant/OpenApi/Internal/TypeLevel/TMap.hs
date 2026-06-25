@@ -8,6 +8,8 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE UndecidableInstances  #-}
+-- | A type-level list traversal that applies a function under a constraint to
+-- every element. Not subject to the PVP; import "Servant.OpenApi.TypeLevel".
 module Servant.OpenApi.Internal.TypeLevel.TMap where
 
 import           Data.Proxy
