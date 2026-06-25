@@ -34,8 +34,12 @@ A generated specification can then be used to
 
 ## Installation
 
-`servant-openapi` is available on [Hackage](https://hackage.haskell.org/package/servant-openapi).
-Add it to your package's `build-depends`:
+> **Pre-release.** The first Hackage release is still in preparation. Until it
+> is published, depend on this repository directly (see
+> [Building from source](#building-from-source) below); the instructions in this
+> section describe the package once it is on Hackage.
+
+Add `servant-openapi` to your package's `build-depends`:
 
 ```cabal
 build-depends: servant-openapi
@@ -53,9 +57,19 @@ import Servant.OpenApi
 
 Requires GHC **9.12.4** or **9.14.1**.
 
-> **Building from source.** To track unreleased changes, pin both packages by
-> git revision with a `source-repository-package` stanza in your `cabal.project`
-> (this repository's own `cabal.project` does so for development).
+<a id="building-from-source"></a>
+> **Building from source.** Until the first Hackage release, depend on this
+> repository directly by adding a `source-repository-package` stanza for
+> `servant-openapi` to your `cabal.project`:
+>
+> ```cabal
+> source-repository-package
+>     type:     git
+>     location: https://github.com/shinzui/servant-openapi.git
+>     tag:      <commit-sha>
+> ```
+>
+> Its `openapi-hs` dependency resolves from Hackage automatically.
 
 ## Usage
 
