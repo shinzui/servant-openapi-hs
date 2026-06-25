@@ -116,12 +116,6 @@ Generated documents are checked at three levels:
    nix run nixpkgs#vacuum-go -- lint -d openapi.json
    ```
 
-## Contributing
-
-Bug reports, fixes, documentation improvements, and other contributions are
-welcome. Please open an issue or pull request on the
-[GitHub issue tracker](https://github.com/shinzui/servant-openapi-hs/issues).
-
 ## License
 
 `servant-openapi-hs` retains the original **BSD-3-Clause** license of the upstream
